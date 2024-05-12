@@ -1,7 +1,6 @@
 import variables
 import requests
 import json
-import time
 import csv
 import os
 
@@ -48,7 +47,6 @@ class Groups:
             json_response = json.loads(response.text)
             members_list.append(json_response['response']['items'])
             get_user_info(','.join(map(str,json_response['response']['items'])), self.name)
-            time.sleep(3)
             offset += 1000
         return members_list
 
@@ -62,7 +60,6 @@ class Users:
         self.city = None
         self.followers_count = None
         self.education = None
-        self.interests = None
         self.last_seen_time = None
         self.last_seen_platform = None
         self.occupation_type = None
@@ -77,7 +74,7 @@ class Users:
         # Adding all class attributes to list for further csv saving
         attr_list = []
         attr_list.extend([self.id, self.is_closed, self.bdate, self.career, self.city, self.followers_count, self.education])
-        attr_list.extend([self.interests, self.last_seen_time, self.last_seen_platform, self.occupation_type])
+        attr_list.extend([self.last_seen_time, self.last_seen_platform, self.occupation_type])
         attr_list.extend([self.personal_political, self.personal_langs, self.personal_religion, self.sex, self.university_name, self.verified])
         return(attr_list)
         
@@ -88,7 +85,7 @@ def get_user_info(user_ids, group_name):
         'access_token': variables.token,
         'user_ids': user_ids,
         'v': variables.version,
-        'fields': 'bdate, career, city, education, followers_count, sex, verified, interests, last_seen, occupation, personal, universities'
+        'fields': 'bdate, career, city, education, followers_count, sex, verified, last_seen, occupation, personal, universities'
     }
     response = requests.post(f"{variables.url}/{api_method}", get_users_request)
     json_response = json.loads(response.text)['response']
@@ -100,7 +97,6 @@ def get_user_info(user_ids, group_name):
         user_data.city = data_string.get('city', {}).get('title')
         user_data.followers_count = data_string.get('followers_count')
         user_data.education = data_string.get('education', {}).get('university_name')
-        user_data.interests = data_string.get('interests')
         user_data.last_seen_time = data_string.get('last_seen', {}).get('time')
         user_data.last_seen_platform = data_string.get('last_seen', {}).get('platform')
         user_data.occupation_type = data_string.get('occupation', {}).get('type')
@@ -131,7 +127,7 @@ def get_user_info(user_ids, group_name):
         # Writing to file
         with open(f'datasets/{group_name}-list.csv', 'a') as csv_file:
             writer = csv.writer(csv_file)
-            headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'followers_count', 'education', 'interests', 'last_seen_time',
+            headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'followers_count', 'education', 'last_seen_time',
                         'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified']
             if os.stat(f'datasets/{group_name}-list.csv').st_size == 0:
                 writer.writerow(headers)
