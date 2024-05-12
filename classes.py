@@ -69,13 +69,14 @@ class Users:
         self.sex = None
         self.university_name = None
         self.verified = None
+        self.group_member = None
         
     def attr_to_list(self):
         # Adding all class attributes to list for further csv saving
         attr_list = []
         attr_list.extend([self.id, self.is_closed, self.bdate, self.career, self.city, self.followers_count, self.education])
-        attr_list.extend([self.last_seen_time, self.last_seen_platform, self.occupation_type])
-        attr_list.extend([self.personal_political, self.personal_langs, self.personal_religion, self.sex, self.university_name, self.verified])
+        attr_list.extend([self.last_seen_time, self.last_seen_platform, self.occupation_type, self.personal_political, self.personal_langs])
+        attr_list.extend([self.personal_religion, self.sex, self.university_name, self.verified, self.group_member])
         return(attr_list)
         
         
@@ -104,6 +105,7 @@ def get_user_info(user_ids, group_name):
         user_data.personal_religion = data_string.get('personal', {}).get('religion')
         user_data.sex = data_string.get('sex')
         user_data.verified = data_string.get('verified')
+        user_data.group_member = group_name
         # Multiple data fields parsing. Universities:
         if 'universities' in data_string:
             uni_name_list = []
@@ -125,11 +127,11 @@ def get_user_info(user_ids, group_name):
             user_data.career = career_list
         attr_list = user_data.attr_to_list()
         # Writing to file
-        with open(f'datasets/{group_name}-list.csv', 'a') as csv_file:
+        with open(f'datasets/users-list.csv', 'a') as csv_file:
             writer = csv.writer(csv_file)
             headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'followers_count', 'education', 'last_seen_time',
-                        'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified']
-            if os.stat(f'datasets/{group_name}-list.csv').st_size == 0:
+                        'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified', 'group_member']
+            if os.stat(f'datasets/users-list.csv').st_size == 0:
                 writer.writerow(headers)
             writer.writerow(attr_list)
         
