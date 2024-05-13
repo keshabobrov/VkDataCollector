@@ -41,6 +41,7 @@ class Groups:
             'v': variables.version
         }
         while offset < self.members_count:
+            print(str(offset) + ' ----- ' + self.name)
             get_members_list = f"{variables.url}/{api_method}"
             get_members_list_request['offset'] = offset
             response = requests.post(get_members_list, get_members_list_request)
