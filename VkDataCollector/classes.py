@@ -6,12 +6,12 @@ import os
 
 
 class Groups:
-    def __init__(self, group_id) -> None:
+    def __init__(self, group_id, group_type) -> None:
         self.group_id = group_id
         self.name = None
         self.members_count = None
         self.is_verified = None
-        self.type = None
+        self.group_type = group_type
     
     def get_group_basic_info(self):
         api_method = 'groups.getById'
@@ -27,7 +27,6 @@ class Groups:
         self.members_count = json_response['response']['groups'][0]['members_count']
         self.name = json_response['response']['groups'][0]['name']
         self.is_verified = json_response['response']['groups'][0]['verified']
-        self.type = json_response['response']['groups'][0]['type']
     
     def get_members_list(self):
         # Getting a 1000 members id's and providing them to get_user_info function for further parsing
@@ -47,7 +46,7 @@ class Groups:
             response = requests.post(get_members_list, get_members_list_request)
             json_response = json.loads(response.text)
             members_list.append(json_response['response']['items'])
-            get_user_info(','.join(map(str,json_response['response']['items'])), self.name)
+            get_user_info(','.join(map(str,json_response['response']['items'])), self.name, self.group_type)
             offset += 1000
         return members_list
 
@@ -71,17 +70,18 @@ class Users:
         self.university_name = None
         self.verified = None
         self.group_member = None
+        self.group_type = None
         
     def attr_to_list(self):
         # Adding all class attributes to list for further csv saving
         attr_list = []
         attr_list.extend([self.id, self.is_closed, self.bdate, self.career, self.city, self.followers_count, self.education])
         attr_list.extend([self.last_seen_time, self.last_seen_platform, self.occupation_type, self.personal_political, self.personal_langs])
-        attr_list.extend([self.personal_religion, self.sex, self.university_name, self.verified, self.group_member])
+        attr_list.extend([self.personal_religion, self.sex, self.university_name, self.verified, self.group_member, self.group_type])
         return(attr_list)
         
         
-def get_user_info(user_ids, group_name):
+def get_user_info(user_ids, group_name, group_type):
     api_method = 'users.get'
     get_users_request ={
         'access_token': variables.token,
@@ -107,6 +107,7 @@ def get_user_info(user_ids, group_name):
         user_data.sex = data_string.get('sex')
         user_data.verified = data_string.get('verified')
         user_data.group_member = group_name
+        user_data.group_type = group_type
         # Multiple data fields parsing. Universities:
         if 'universities' in data_string:
             uni_name_list = []
@@ -128,11 +129,11 @@ def get_user_info(user_ids, group_name):
             user_data.career = career_list
         attr_list = user_data.attr_to_list()
         # Writing to file
-        with open(f'datasets/users-list.csv', 'a') as csv_file:
+        with open(f'VkDataCollector/datasets/{group_name}.csv', 'a') as csv_file:
             writer = csv.writer(csv_file)
             headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'followers_count', 'education', 'last_seen_time',
                         'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified', 'group_member']
-            if os.stat(f'datasets/users-list.csv').st_size == 0:
+            if os.stat(f'VkDataCollector/datasets/{group_name}.csv').st_size == 0:
                 writer.writerow(headers)
             writer.writerow(attr_list)
         
