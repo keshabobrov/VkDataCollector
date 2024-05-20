@@ -3,6 +3,7 @@ import requests
 import json
 import csv
 import os
+import time
 
 
 class Groups:
@@ -43,6 +44,7 @@ class Groups:
             print(str(offset) + ' ----- ' + self.name)
             get_members_list = f"{variables.url}/{api_method}"
             get_members_list_request['offset'] = offset
+            time.sleep(0.2)
             response = requests.post(get_members_list, get_members_list_request)
             json_response = json.loads(response.text)
             members_list.append(json_response['response']['items'])
@@ -93,6 +95,7 @@ class Users:
         while offset < self.friends_count:
             get_friends_list = f"{variables.url}/{api_method}"
             get_friends_list_request['offset'] = offset
+            time.sleep(0.2)
             response = requests.post(get_friends_list, get_friends_list_request)
             json_response = json.loads(response.text)
             if not self.is_closed:
@@ -110,6 +113,7 @@ def get_user_info(user_ids, group_name, group_type):
         'v': variables.version,
         'fields': 'bdate, career, city, education, friends_count, sex, verified, last_seen, occupation, personal, universities'
     }
+    time.sleep(0.2)
     response = requests.post(f"{variables.url}/{api_method}", get_users_request)
     json_response = json.loads(response.text)['response']
     for data_string in json_response:
