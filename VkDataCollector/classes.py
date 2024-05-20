@@ -58,7 +58,7 @@ class Users:
         self.bdate = None
         self.career = None
         self.city = None
-        self.followers_count = None
+        self.friends_count = 1
         self.education = None
         self.last_seen_time = None
         self.last_seen_platform = None
@@ -69,16 +69,37 @@ class Users:
         self.sex = None
         self.university_name = None
         self.verified = None
-        self.group_member = None
+        self.connection_type = None
         self.group_type = None
+        self.friends = None
         
     def attr_to_list(self):
         # Adding all class attributes to list for further csv saving
         attr_list = []
-        attr_list.extend([self.id, self.is_closed, self.bdate, self.career, self.city, self.followers_count, self.education])
+        attr_list.extend([self.id, self.is_closed, self.bdate, self.career, self.city, self.friends_count, self.education])
         attr_list.extend([self.last_seen_time, self.last_seen_platform, self.occupation_type, self.personal_political, self.personal_langs])
-        attr_list.extend([self.personal_religion, self.sex, self.university_name, self.verified, self.group_member, self.group_type])
+        attr_list.extend([self.personal_religion, self.sex, self.university_name, self.verified, self.connection_type, self.group_type, self.friends])
         return(attr_list)
+    
+    def get_friends(self):
+        offset = 0
+        friends_list = []
+        api_method = 'friends.get'
+        get_friends_list_request ={
+            'access_token': variables.token,
+            'user_id': self.id,
+            'v': variables.version
+        }
+        while offset < self.friends_count:
+            get_friends_list = f"{variables.url}/{api_method}"
+            get_friends_list_request['offset'] = offset
+            response = requests.post(get_friends_list, get_friends_list_request)
+            json_response = json.loads(response.text)
+            if not self.is_closed:
+                self.friends_count = json_response['response']['count']
+                friends_list.append(json_response['response']['items'])
+            offset += 1000
+        self.friends = friends_list
         
         
 def get_user_info(user_ids, group_name, group_type):
@@ -87,7 +108,7 @@ def get_user_info(user_ids, group_name, group_type):
         'access_token': variables.token,
         'user_ids': user_ids,
         'v': variables.version,
-        'fields': 'bdate, career, city, education, followers_count, sex, verified, last_seen, occupation, personal, universities'
+        'fields': 'bdate, career, city, education, friends_count, sex, verified, last_seen, occupation, personal, universities'
     }
     response = requests.post(f"{variables.url}/{api_method}", get_users_request)
     json_response = json.loads(response.text)['response']
@@ -97,7 +118,6 @@ def get_user_info(user_ids, group_name, group_type):
         user_data.is_closed = data_string.get('is_closed')
         user_data.bdate = data_string.get('bdate')
         user_data.city = data_string.get('city', {}).get('title')
-        user_data.followers_count = data_string.get('followers_count')
         user_data.education = data_string.get('education', {}).get('university_name')
         user_data.last_seen_time = data_string.get('last_seen', {}).get('time')
         user_data.last_seen_platform = data_string.get('last_seen', {}).get('platform')
@@ -106,7 +126,7 @@ def get_user_info(user_ids, group_name, group_type):
         user_data.personal_religion = data_string.get('personal', {}).get('religion')
         user_data.sex = data_string.get('sex')
         user_data.verified = data_string.get('verified')
-        user_data.group_member = group_name
+        user_data.connection_type = group_name
         user_data.group_type = group_type
         # Multiple data fields parsing. Universities:
         if 'universities' in data_string:
@@ -127,12 +147,14 @@ def get_user_info(user_ids, group_name, group_type):
                 if 'position' in job:
                     career_list.append(job['position'])
             user_data.career = career_list
+        user_data.get_friends()
         attr_list = user_data.attr_to_list()
         # Writing to file
         with open(f'VkDataCollector/datasets/{group_name}.csv', 'a') as csv_file:
             writer = csv.writer(csv_file)
-            headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'followers_count', 'education', 'last_seen_time',
-                        'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified', 'group_member']
+            headers = ['id', 'is_closed', 'bdate', 'career', 'city', 'friends_count', 'education', 'last_seen_time',
+                        'last_seen_platform', 'occupation', 'political', 'langs', 'religion', 'sex', 'university', 'verified', 
+                        'connection_type', 'group_type', 'friends_ids']
             if os.stat(f'VkDataCollector/datasets/{group_name}.csv').st_size == 0:
                 writer.writerow(headers)
             writer.writerow(attr_list)
