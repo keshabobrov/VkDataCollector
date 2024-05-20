@@ -6,7 +6,7 @@ import os
 import time
 import logging
 
-logging.basicConfig(filename='logger.log', level=logging.ERROR, filemode='w')
+logging.basicConfig(filename='logger.log', level=logging.WARNING, filemode='w')
 
 class Groups:
     def __init__(self, group_id, group_type) -> None:
@@ -44,10 +44,9 @@ class Groups:
                 'v': variables.version
             }
             while offset < self.members_count:
-                print(str(offset) + ' ----- ' + self.name)
+                logging.warning(str(offset) + ' ----- ' + self.name)
                 get_members_list = f"{variables.url}/{api_method}"
                 get_members_list_request['offset'] = offset
-                time.sleep(0.15)
                 response = requests.post(get_members_list, get_members_list_request)
                 json_response = json.loads(response.text)
                 members_list.append(json_response['response']['items'])
@@ -101,7 +100,6 @@ class Users:
             while offset < self.friends_count:
                 get_friends_list = f"{variables.url}/{api_method}"
                 get_friends_list_request['offset'] = offset
-                time.sleep(0.15)
                 response = requests.post(get_friends_list, get_friends_list_request)
                 json_response = json.loads(response.text)
                 if not self.is_closed:
@@ -122,7 +120,6 @@ def get_user_info(user_ids, group_name, group_type):
             'v': variables.version,
             'fields': 'bdate, career, city, education, friends_count, sex, verified, last_seen, occupation, personal, universities'
         }
-        time.sleep(0.15)
         response = requests.post(f"{variables.url}/{api_method}", get_users_request)
         json_response = json.loads(response.text)['response']
         for data_string in json_response:
