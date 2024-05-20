@@ -107,7 +107,7 @@ class Users:
                 if not self.is_closed:
                     self.friends_count = json_response['response']['count']
                     friends_list.append(json_response['response']['items'])
-                offset += 1000
+                offset += 1000 # Needed to set to 5000
             self.friends = friends_list
         except:
             logging.error(f'Error in get_friends: {json_response}', exc_info=True)
