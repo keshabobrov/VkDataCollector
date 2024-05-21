@@ -95,7 +95,7 @@ class Groups:
             response = requests.post(f"{variables.url}/execute", request)
             json_response = json.loads(response.text)
             if 'error' in json_response and json_response['error']['error_code'] == 6:
-                logging.warning('Too many requests. Retrying...')
+                logging.warning(f'offset: {offset} Too many requests. Retrying...')
                 time.sleep(0.05)
                 continue
             try:
