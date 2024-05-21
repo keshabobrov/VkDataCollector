@@ -4,7 +4,7 @@ import vk_execute
     
 def main():
     print('Worker start')
-    with open(f'VkDataCollector/group_list.csv', 'r') as group_list_file:
+    with open(f'group_list.csv', 'r') as group_list_file:
        group_list = csv.DictReader(group_list_file)
        for group_data in group_list:
             group = vk_execute.Groups(group_data['group_id'], group_data['group_type'])
