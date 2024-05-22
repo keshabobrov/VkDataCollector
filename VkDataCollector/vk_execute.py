@@ -26,6 +26,7 @@ class Groups:
                 'v': variables.version,
                 'fields': 'members_count, verified'
             }
+            time.sleep(1)
             response = requests.post(f"{variables.url}/{api_method}", request)
             json_response = json.loads(response.text)
             # Fetching basic group info
