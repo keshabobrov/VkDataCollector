@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import glob
+import json
 
 
 def combine_files():
@@ -10,8 +11,7 @@ def combine_files():
 
   for file in files:
     print(file)
-    filepath = path + file
-    frame = pd.read_csv(filepath)
+    frame = pd.read_csv(file)
     li.append(frame)
 
   df = pd.concat(li, ignore_index=True)
@@ -37,6 +37,16 @@ def remove_abandoned_accounts(df):
   else:
     print('Abandoned accounts was not removed')
   return df
+
+
+def remove_large_freinds(df):
+    print('Large friends accounts found: ' + str(df[df.friends_count > 5000].id.count()))
+    df.drop(df[df.friends_count > 5000].index, inplace=True)
+    if str(df[df.friends_count > 5000].id.count()) == 0:
+        print('Large friends accounts was removed')
+    else:
+        print('Large friends accounts was not removed')
+    return df
 
 
 def handle_duplicates(df):
@@ -85,25 +95,59 @@ def fill_none_values(df):
   return df
 
 
+def fix_date_issue(df):
+    def correct_invalid_dates(date_str):
+        day, month, year = date_str.split('.')
+    
+        if day == '31' and month == '2':
+            corrected_date = f'2.3.{year}'
+            return corrected_date
+        elif day == '30' and month == '2':
+            corrected_date = f'1.3.{year}'
+            return corrected_date
+        elif day == '29' and month == '2':
+            corrected_date = f'1.3.{year}'
+            return corrected_date
+        elif day == '31' and month == '4':
+            corrected_date = f'29.4.{year}'
+            return corrected_date
+        else:
+            return date_str
+    df['bdate'] = df['bdate'].apply(correct_invalid_dates)
+    return df
+
+
 def datatypes_normalization(df):
   int_columns = ['id', 'last_seen_platform', 'political', 'sex', 'verified']
   category_columns = ['city', 'occupation', 'university']
   
   df[int_columns] = df[int_columns].astype('int')
-  df['bdate'] = pd.to_datetime(df['bdate'], format='%d.%m.%Y', errors='raise')
+  df['bdate'] = pd.to_datetime(df['bdate'], format='%d.%m.%Y', dayfirst=True, errors='raise')
   df[category_columns] = df[category_columns].astype('category')
   print('data normalization done')
   return df
+
+
+def extract_friends(df):
+    df = df[['friends_ids']]
+    df['friends_ids'] = df['friends_ids'].apply(json.loads)
+    print('json loaded')
+    df = df.explode('friends_ids').dropna(subset=['friends_ids']).drop_duplicates(subset=['friends_ids'])
+    return(df)
 
 
 def main():
   df = combine_files()
   df = remove_closed_accounts(df)
   df = remove_abandoned_accounts(df)
+  df = remove_large_freinds(df)
   df = handle_duplicates(df)
   df = fill_none_values(df)
+  df = fix_date_issue(df)
   df = datatypes_normalization(df)
-  df.to_parquet(path='dataset.parquet')
+  df.to_parquet(path='dataset.parquet', engine='fastparquet')
+  friends_ids_df = extract_friends(df)
+  friends_ids_df.to_csv('friends.csv', index=False)
 
 
 main()
