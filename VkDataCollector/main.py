@@ -1,8 +1,9 @@
-import csv
 import vk_execute
+import collect_friends
+import csv
 
     
-def main():
+def collect_user_data():
     print('Worker start')
     with open(f'group_list.csv', 'r') as group_list_file:
        group_list = csv.DictReader(group_list_file)
@@ -15,4 +16,10 @@ def main():
     print('Worker finished')
 
 
-main()
+def collect_friends_list():
+    print('Worker start')
+    collect_friends.data_processor()
+    print('Worker ended')
+        
+
+collect_friends_list()
