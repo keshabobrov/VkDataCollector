@@ -21,8 +21,8 @@ def reader():
 
 
 def backend_executor(ids):
-    try:
-        while True:
+    while True:
+        try:
             request = {
                 'access_token': variables.token,
                 'v': variables.version,
@@ -45,18 +45,33 @@ def backend_executor(ids):
                 logging.warning(f'Too many requests. Retrying...')
                 time.sleep(0.05)
                 continue
+            if 'error' in json_response and json_response['error']['error_code'] != 6:
+                logging.error(f'Some error happend ----- {json_response}', exc_info=True)
+                variables.bot.send_message(variables.telegram_watcher_id, f'Some error! {json_response['error']}')
+                time.sleep(60)
+                continue
             return json_response
-    except:
-       logging.error(f'Some error happend ----- {json_response}', exc_info=True)
-       variables.bot.send_message(variables.telegram_watcher_id, 'Some error!')
-       time.sleep(60)
+        except:
+            logging.error(f'Some error happend ----- {json_response}', exc_info=True)
+            variables.bot.send_message(variables.telegram_watcher_id, 'Some error!')
+            time.sleep(60)
+            continue
 
 
 def data_processor():
     variables.bot.send_message(variables.telegram_watcher_id, 'Worker starter')
     index = 0
+    start = 2500000
     file_number = 0
     for chunk in reader():
+        if start != None and index < start:
+            index += 25
+            continue
+        if start != None and index == start:
+            index = 0
+            start = None
+            logging.warning("started from index")
+            continue
         if index == 250000:
             file_number += 1
             variables.bot.send_message(variables.telegram_watcher_id, f'Another done — {file_number}')
