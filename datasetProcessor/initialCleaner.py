@@ -3,11 +3,12 @@ import os
 import glob
 import json
 
-
 def combine_files():
-  path = '../datasets'
+  os.chdir('datasets')
+  path = 'datasets_row'
   files = glob.glob(os.path.join(path , "*.csv"))
   li = []
+  print(path)
 
   for file in files:
     print(file)
@@ -93,8 +94,7 @@ def fill_none_values(df):
 
   df['bdate'] = df['bdate'].apply(set_bdate_default)
   return df
-
-
+  
 def fix_date_issue(df):
     def correct_invalid_dates(date_str):
         day, month, year = date_str.split('.')
@@ -123,12 +123,15 @@ def datatypes_normalization(df):
   
   df[int_columns] = df[int_columns].astype('int')
   df['bdate'] = pd.to_datetime(df['bdate'], format='%d.%m.%Y', dayfirst=True, errors='raise')
+  #print(df[df['bdate'].isnull()])
   df[category_columns] = df[category_columns].astype('category')
   print('data normalization done')
   return df
 
 
 def extract_friends(df):
+    #friends_ids_df = df[['friends_ids']]
+    #friends_ids_df.loc[:, 'friends_ids'] = friends_ids_df['friends_ids'].apply(ast.literal_eval)
     df = df[['friends_ids']]
     df['friends_ids'] = df['friends_ids'].apply(json.loads)
     print('json loaded')
@@ -146,8 +149,3 @@ def main():
   df = fix_date_issue(df)
   df = datatypes_normalization(df)
   df.to_parquet(path='dataset.parquet', engine='fastparquet')
-  friends_ids_df = extract_friends(df)
-  friends_ids_df.to_csv('friends.csv', index=False)
-
-
-main()
