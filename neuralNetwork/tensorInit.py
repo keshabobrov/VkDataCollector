@@ -7,7 +7,7 @@ import pandas
 class VkDataset(Dataset):
     def __init__(self):
         clear_dataset()
-        xy = np.loadtxt('datasets/for_model.csv', delimiter=',', dtype=np.float64, skiprows=1)
+        xy = np.loadtxt('datasets/for_model.csv', delimiter=',', dtype=np.float32, skiprows=1)
         self.x = torch.from_numpy(np.delete(xy, 8, 1))
         self.y = torch.from_numpy(xy[:, [8]])
         self.n_samples = xy.shape[0]
@@ -17,7 +17,7 @@ class VkDataset(Dataset):
     
     def __len__(self):
         return self.n_samples
-    
+
 
 def clear_dataset():
     df = pandas.read_csv('datasets/10Kflat.csv')
